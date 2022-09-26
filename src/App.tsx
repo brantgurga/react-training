@@ -1,11 +1,12 @@
 import { Link, Route, Routes } from "react-router-dom";
 import Admin from "./Admin";
 import Menu from "./Menu";
+import Heading from "./shared/heading";
 
 export default function App() {
   return (
     <>
-      <h1 className="text-3xl font-bold">Hello world!</h1>
+      <Heading level={2}>Hello world</Heading>
       <nav className="bg-pink-200">
         <Link to="/">Home</Link>
         <span> </span>

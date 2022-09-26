@@ -1,4 +1,5 @@
 import { foods } from "./food";
+import Heading from "./shared/heading";
 
 export default function Menu() {
   return (
@@ -9,7 +10,7 @@ export default function Menu() {
             className="p-2 shadow-lg hover:bg-indigo-600 hover:text-white border flex max-w-sm flex-row m-2 rounded"
             key={food.name}
           >
-            <h2 className="m-2 text-3xl">{food.name}</h2>
+            <Heading level={3}>{food.name}</Heading>
             <img
               className="h-52"
               src={"/images/" + food.image}
