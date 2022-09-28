@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Food, foodTags } from "./food";
+import toast from "react-hot-toast";
+import { foodTags, NewFood } from "./food";
+import { addFood } from "./services/foodsApi";
 import Button from "./shared/Button";
 import Checkbox from "./shared/Checkbox";
 import CheckboxList from "./shared/CheckboxList";
 import Heading from "./shared/Heading";
 import Input from "./shared/Input";
 
-const emptyFood: Food = {
+const emptyFood: NewFood = {
   name: "",
   image: "",
   price: 0,
@@ -14,8 +16,31 @@ const emptyFood: Food = {
   tags: [],
 };
 
+export type Errors = {
+  name?: string;
+  image?: string;
+  price?: string;
+  description?: string;
+  tags?: string;
+};
+
+export type Touched = {
+  name?: boolean;
+  image?: boolean;
+  price?: boolean;
+  description?: boolean;
+  tags?: boolean;
+};
+
+type FormStatus = "idle" | "submitting" | "submitted" | "error";
+
 export default function Admin() {
   const [food, setFood] = useState(emptyFood);
+  const [touched, setTouched] = useState<Touched>({});
+  const [status, setStatus] = useState<FormStatus>("idle");
+
+  const errors = validate();
+  const isValid = Object.keys(errors).length === 0;
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { id, value } = event.target;
@@ -23,23 +48,70 @@ export default function Admin() {
     setFood((currentFood) => ({ ...currentFood, [id]: value }));
   }
 
+  function handleBlur(event: React.FocusEvent<HTMLInputElement>) {
+    const { id } = event.target;
+    setTouched((currentTouched) => ({ ...currentTouched, [id]: true }));
+  }
+
+  function validate() {
+    const newErrors: Errors = {};
+    if (!food.name) {
+      newErrors.name = "Name is required";
+    }
+    if (!food.image) {
+      newErrors.image = "Image is required";
+    }
+    if (!food.price) {
+      newErrors.price = "Price is required";
+    }
+    if (!food.description) {
+      newErrors.description = "Description is required";
+    }
+    if (food.tags.length === 0) {
+      newErrors.tags = "At least one tag is required";
+    }
+    return newErrors;
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("submitting");
+    if (!isValid) {
+      setStatus("submitted");
+      return;
+    }
+    await addFood(food);
+    toast.success("Food added! 🍔");
+    setFood(emptyFood);
+  }
+
   return (
     <>
       <Heading level={2}>Admin</Heading>
-      <form>
+
+      <form onSubmit={handleSubmit}>
         <Input
           id="name"
           label="Name"
           className="my-4"
           onChange={handleInputChange}
+          onBlur={handleBlur}
           value={food.name}
+          // Exercise 7: Centralize this logic in a function above.
+          error={status === "submitted" || touched.name ? errors.name : ""}
         />
         <Input
           id="description"
           label="Description"
           className="my-4"
           onChange={handleInputChange}
+          onBlur={handleBlur}
           value={food.description}
+          error={
+            status === "submitted" || touched.description
+              ? errors.description
+              : ""
+          }
         />
         <Input
           id="price"
@@ -47,16 +119,20 @@ export default function Admin() {
           type="number"
           className="my-4"
           onChange={handleInputChange}
+          onBlur={handleBlur}
           value={food.price.toString()}
+          error={errors.price}
         />
         <Input
           id="image"
           label="Image filename"
           className="my-4"
           onChange={handleInputChange}
+          onBlur={handleBlur}
           value={food.image}
+          error={errors.image}
         />
-        <CheckboxList label="Tags">
+        <CheckboxList label="Tags" error={errors.tags}>
           {foodTags.map((tag) => (
             <Checkbox
               key={tag}
