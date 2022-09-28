@@ -75,6 +75,7 @@ export default function Admin() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    window.scrollTo(0, 0);
     setStatus("submitting");
     if (!isValid) {
       setStatus("submitted");
@@ -82,7 +83,13 @@ export default function Admin() {
     }
     await addFood(food);
     toast.success("Food added! 🍔");
+    setStatus("idle");
     setFood(emptyFood);
+    setTouched({});
+  }
+
+  function getError(id: keyof Errors) {
+    return status === "submitted" || touched[id] ? errors[id] : "";
   }
 
   return (
@@ -97,8 +104,7 @@ export default function Admin() {
           onChange={handleInputChange}
           onBlur={handleBlur}
           value={food.name}
-          // Exercise 7: Centralize this logic in a function above.
-          error={status === "submitted" || touched.name ? errors.name : ""}
+          error={getError("name")}
         />
         <Input
           id="description"
@@ -107,11 +113,7 @@ export default function Admin() {
           onChange={handleInputChange}
           onBlur={handleBlur}
           value={food.description}
-          error={
-            status === "submitted" || touched.description
-              ? errors.description
-              : ""
-          }
+          error={getError("description")}
         />
         <Input
           id="price"
@@ -121,7 +123,7 @@ export default function Admin() {
           onChange={handleInputChange}
           onBlur={handleBlur}
           value={food.price.toString()}
-          error={errors.price}
+          error={getError("price")}
         />
         <Input
           id="image"
@@ -130,9 +132,9 @@ export default function Admin() {
           onChange={handleInputChange}
           onBlur={handleBlur}
           value={food.image}
-          error={errors.image}
+          error={getError("image")}
         />
-        <CheckboxList label="Tags" error={errors.tags}>
+        <CheckboxList label="Tags" error={getError("tags")}>
           {foodTags.map((tag) => (
             <Checkbox
               key={tag}
